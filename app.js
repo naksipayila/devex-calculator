@@ -1,0 +1,410 @@
+const DEVEX_RATE = 0.0038;
+const TAX_RATE = 0.30;
+const STORAGE_KEYS = {
+    robux: 'devexRobux',
+    tryRate: 'tryRate',
+    tryRateTimestamp: 'tryRateTimestamp'
+};
+
+let robux = '';
+let usd = '';
+let tryRate = 46.00;
+let prevUsdValue = 0;
+let animFrameId = null;
+
+const mainInput = document.getElementById('mainInput');
+const inputWrapper = document.getElementById('inputWrapper');
+const inputPrefix = document.getElementById('inputPrefix');
+const inputLabel = document.getElementById('inputLabel');
+const clearBtn = document.getElementById('clearBtn');
+const quickGrid = document.getElementById('quickGrid');
+const tryRateInput = document.getElementById('tryRateInput');
+const refreshRateBtn = document.getElementById('refreshRateBtn');
+const rateStatus = document.getElementById('rateStatus');
+const summaryUsdWrapper = document.getElementById('summaryUsdWrapper');
+const summaryUsdInput = document.getElementById('summaryUsdInput');
+const summaryTry = document.getElementById('summaryTry');
+const taxDrawer = document.getElementById('taxDrawer');
+const openTaxBtn = document.getElementById('openTaxBtn');
+const closeTaxBtn = document.getElementById('closeTaxBtn');
+const netRobuxInput = document.getElementById('netRobuxInput');
+const grossRobuxInput = document.getElementById('grossRobuxInput');
+const taxAmountDisplay = document.getElementById('taxAmountDisplay');
+
+const getStoredItem = (key) => {
+    try {
+        return localStorage.getItem(key);
+    } catch (error) {
+        return null;
+    }
+};
+
+const setStoredItem = (key, value) => {
+    try {
+        localStorage.setItem(key, value);
+    } catch (error) {
+        // Storage can be unavailable in some embedded browser contexts.
+    }
+};
+
+const removeStoredItem = (key) => {
+    try {
+        localStorage.removeItem(key);
+    } catch (error) {
+        // Storage can be unavailable in some embedded browser contexts.
+    }
+};
+
+const formatNumber = (num) => {
+    if (!num) return '';
+    const val = parseFloat(num.toString().replace(/\./g, ''));
+    if (isNaN(val)) return '';
+    return val.toLocaleString('tr-TR');
+};
+
+const parseRobux = (value) => {
+    const clean = value.toString().replace(/\./g, '').replace(/[^0-9]/g, '');
+    return parseFloat(clean) || 0;
+};
+
+const parseUsd = (value) => {
+    const cleaned = value.toString().trim().replace(/[^0-9.,]/g, '');
+    if (!cleaned) return 0;
+
+    const lastComma = cleaned.lastIndexOf(',');
+    const lastDot = cleaned.lastIndexOf('.');
+    const normalized = lastComma > lastDot
+        ? cleaned.replace(/\./g, '').replace(',', '.')
+        : cleaned.replace(/,/g, '');
+    const parts = normalized.split('.');
+    const decimalSafe = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
+
+    return parseFloat(decimalSafe) || 0;
+};
+
+const formatUsdInput = (value) => {
+    return value.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+};
+
+const formatUsd = (value) => {
+    return `$${formatUsdInput(value)}`;
+};
+
+const formatCurrencyTRY = (val) => {
+    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val);
+};
+
+const setRateStatus = (text, type = 'ok') => {
+    rateStatus.textContent = text;
+    rateStatus.className = `rate-status ${type}`;
+};
+
+const persistState = () => {
+    setStoredItem(STORAGE_KEYS.robux, robux);
+};
+
+const showToast = (message) => {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+};
+
+const animateNumber = (el, from, to, formatter, duration = 250) => {
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    const startTime = performance.now();
+
+    const tick = (now) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = from + (to - from) * eased;
+        el.value = formatter(current);
+
+        if (progress < 1) {
+            animFrameId = requestAnimationFrame(tick);
+        } else {
+            animFrameId = null;
+        }
+    };
+
+    animFrameId = requestAnimationFrame(tick);
+};
+
+const clear = () => {
+    robux = '';
+    usd = '';
+};
+
+function updateFromRobux(valStr) {
+    if (!valStr) return clear();
+    robux = valStr.toString().replace(/[^0-9]/g, '');
+    usd = (parseRobux(robux) * DEVEX_RATE).toFixed(2);
+}
+
+function updateFromUsd(valStr) {
+    if (!valStr) return clear();
+    const rawUsd = parseUsd(valStr);
+
+    usd = rawUsd ? rawUsd.toFixed(2) : '';
+    robux = rawUsd ? Math.floor(rawUsd / DEVEX_RATE).toString() : '';
+}
+
+const loadSavedState = () => {
+    const savedRobux = getStoredItem(STORAGE_KEYS.robux);
+
+    if (savedRobux) {
+        updateFromRobux(savedRobux);
+    }
+};
+
+const updateSummary = (rawUsd, rawRobux, tryDisplay, usdDisplay) => {
+    if (document.activeElement !== summaryUsdInput) {
+        const newUsd = rawUsd || 0;
+        animateNumber(summaryUsdInput, prevUsdValue, newUsd, formatUsdInput, 250);
+        prevUsdValue = newUsd;
+    }
+    summaryTry.textContent = tryDisplay;
+};
+
+const fetchExchangeRate = async () => {
+    const cachedRate = getStoredItem(STORAGE_KEYS.tryRate);
+    const cachedTimestamp = getStoredItem(STORAGE_KEYS.tryRateTimestamp);
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    if (cachedRate && cachedTimestamp && (Date.now() - parseInt(cachedTimestamp, 10) < oneDay)) {
+        tryRate = parseFloat(cachedRate);
+        setRateStatus('Rate: cached');
+        updateUI();
+        return;
+    }
+
+    setRateStatus('Checking rate', 'warning');
+
+    try {
+        const response = await fetch('https://open.er-api.com/v6/latest/USD');
+
+        if (!response.ok) {
+            throw new Error(`Rate service did not respond: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data && data.rates && data.rates.TRY) {
+            tryRate = data.rates.TRY;
+            setStoredItem(STORAGE_KEYS.tryRate, tryRate.toString());
+            setStoredItem(STORAGE_KEYS.tryRateTimestamp, Date.now().toString());
+            setRateStatus('Rate: current');
+            updateUI();
+        }
+    } catch (error) {
+        console.error('Exchange rate could not be fetched, using the fallback value:', error);
+
+        if (cachedRate) {
+            tryRate = parseFloat(cachedRate);
+            setRateStatus('Rate: cached', 'warning');
+            updateUI();
+        } else {
+            setRateStatus('Rate: manual', 'warning');
+        }
+    }
+};
+
+const triggerFlash = () => {
+    const primaryRow = document.querySelector('.summary-row-primary');
+    [summaryUsdWrapper, summaryTry, primaryRow].forEach((el) => {
+        if (el) el.classList.add('flash');
+    });
+    setTimeout(() => {
+        [summaryUsdWrapper, summaryTry, primaryRow].forEach((el) => {
+            if (el) el.classList.remove('flash');
+        });
+    }, 400);
+};
+
+const addAmount = (amount) => {
+    const currentVal = parseRobux(robux);
+    updateFromRobux((currentVal + amount).toString());
+    triggerFlash();
+    updateUI();
+};
+
+const updateUI = () => {
+    const rawUsd = parseUsd(usd);
+    const rawRobux = parseRobux(robux);
+    const usdDisplay = formatUsd(rawUsd);
+    const tryDisplay = formatCurrencyTRY(rawUsd * tryRate);
+
+    inputLabel.textContent = 'Robux';
+    inputPrefix.innerHTML = '<span class="prefix-robux">R$</span>';
+    mainInput.value = formatNumber(robux);
+
+    updateSummary(rawUsd, rawRobux, tryDisplay, usdDisplay);
+
+    if (document.activeElement !== tryRateInput) {
+        tryRateInput.value = tryRate.toFixed(2);
+    }
+    renderQuickButtons();
+    persistState();
+};
+
+const renderQuickButtons = () => {
+    quickGrid.innerHTML = '';
+
+    [1000, 5000, 10000, 50000, 100000, 200000].forEach((amt) => {
+        const btn = document.createElement('button');
+        btn.className = 'quick-btn';
+        btn.textContent = `+${amt >= 1000 ? `${amt / 1000}K` : amt}`;
+        btn.addEventListener('click', () => addAmount(amt));
+        quickGrid.appendChild(btn);
+    });
+};
+
+summaryUsdInput.addEventListener('input', (e) => {
+    updateFromUsd(e.target.value);
+    updateUI();
+});
+
+summaryUsdInput.addEventListener('click', () => {
+    summaryUsdInput.value = '';
+});
+
+summaryUsdInput.addEventListener('blur', () => {
+    updateUI();
+});
+
+mainInput.addEventListener('input', (e) => {
+    updateFromRobux(e.target.value);
+    updateUI();
+});
+
+mainInput.addEventListener('focus', () => {
+    inputWrapper.classList.add('focused');
+});
+
+mainInput.addEventListener('blur', () => {
+    inputWrapper.classList.remove('focused');
+});
+
+clearBtn.addEventListener('click', () => {
+    clear();
+    triggerFlash();
+    updateUI();
+});
+
+tryRateInput.addEventListener('input', (e) => {
+    const val = parseUsd(e.target.value);
+    if (!isNaN(val) && val > 0) {
+        tryRate = val;
+        setStoredItem(STORAGE_KEYS.tryRate, tryRate.toString());
+        setStoredItem(STORAGE_KEYS.tryRateTimestamp, Date.now().toString());
+        setRateStatus('Rate: manual', 'warning');
+
+        const rawUsd = parseUsd(usd);
+        const rawRobux = parseRobux(robux);
+        const usdDisplay = formatUsd(rawUsd);
+        const tryDisplay = formatCurrencyTRY(rawUsd * tryRate);
+        updateSummary(rawUsd, rawRobux, tryDisplay, usdDisplay);
+    }
+});
+
+tryRateInput.addEventListener('blur', () => {
+    updateUI();
+});
+
+refreshRateBtn.addEventListener('click', async () => {
+    refreshRateBtn.classList.add('spinning');
+    removeStoredItem(STORAGE_KEYS.tryRate);
+    removeStoredItem(STORAGE_KEYS.tryRateTimestamp);
+    await fetchExchangeRate();
+
+    setTimeout(() => {
+        refreshRateBtn.classList.remove('spinning');
+    }, 500);
+});
+
+openTaxBtn.addEventListener('click', () => {
+    taxDrawer.classList.add('open');
+    netRobuxInput.value = '';
+    grossRobuxInput.value = '';
+    taxAmountDisplay.textContent = '0 R$';
+});
+
+const closeDrawer = () => {
+    taxDrawer.classList.remove('open');
+};
+
+closeTaxBtn.addEventListener('click', closeDrawer);
+taxDrawer.addEventListener('click', (e) => {
+    if (e.target === taxDrawer) {
+        closeDrawer();
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && taxDrawer.classList.contains('open')) {
+        closeDrawer();
+    }
+});
+
+const calculateFromNet = (netVal) => {
+    const net = parseFloat(netVal) || 0;
+    const gross = Math.floor(net / (1 - TAX_RATE));
+    const tax = gross - net;
+
+    grossRobuxInput.value = formatNumber(gross);
+    taxAmountDisplay.textContent = `${formatNumber(tax)} R$`;
+};
+
+const calculateFromGross = (grossVal) => {
+    const gross = parseFloat(grossVal) || 0;
+    const net = Math.floor(gross * (1 - TAX_RATE));
+    const tax = gross - net;
+
+    netRobuxInput.value = formatNumber(net);
+    taxAmountDisplay.textContent = `${formatNumber(tax)} R$`;
+};
+
+netRobuxInput.addEventListener('input', (e) => {
+    const clean = e.target.value.replace(/[^0-9]/g, '');
+    e.target.value = formatNumber(clean);
+    calculateFromNet(clean);
+});
+
+grossRobuxInput.addEventListener('input', (e) => {
+    const clean = e.target.value.replace(/[^0-9]/g, '');
+    e.target.value = formatNumber(clean);
+    calculateFromGross(clean);
+});
+
+document.getElementById('grossCopyBtn').addEventListener('click', () => {
+    const text = grossRobuxInput.value;
+    if (text && text !== '0') {
+        navigator.clipboard.writeText(text.replace(/\./g, '')).then(() => {
+            showToast('Gross Robux copied');
+        }).catch(() => {});
+    }
+});
+
+summaryTry.addEventListener('click', () => {
+    const text = summaryTry.textContent;
+    if (text && text !== '0,00 ₺') {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('TRY copied');
+        }).catch(() => {});
+    }
+});
+
+summaryUsdWrapper.addEventListener('click', (e) => {
+    if (e.target !== summaryUsdInput) {
+        summaryUsdInput.focus();
+        summaryUsdInput.select();
+    }
+});
+
+loadSavedState();
+updateUI();
+fetchExchangeRate();
+setInterval(fetchExchangeRate, 24 * 60 * 60 * 1000);
