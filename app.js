@@ -12,12 +12,14 @@ let tryRate = 46.00;
 let prevUsdValue = 0;
 let animFrameId = null;
 
+
 const mainInput = document.getElementById('mainInput');
 const inputWrapper = document.getElementById('inputWrapper');
 const inputPrefix = document.getElementById('inputPrefix');
 const inputLabel = document.getElementById('inputLabel');
 const clearBtn = document.getElementById('clearBtn');
 const quickGrid = document.getElementById('quickGrid');
+
 const tryRateInput = document.getElementById('tryRateInput');
 const refreshRateBtn = document.getElementById('refreshRateBtn');
 const rateStatus = document.getElementById('rateStatus');
@@ -253,11 +255,34 @@ const updateUI = () => {
 const renderQuickButtons = () => {
     quickGrid.innerHTML = '';
 
-    [1000, 5000, 10000, 50000, 100000, 200000].forEach((amt) => {
+    [1000, 5000, 10000, 50000, 100000].forEach((amt) => {
         const btn = document.createElement('button');
         btn.className = 'quick-btn';
         btn.textContent = `+${amt >= 1000 ? `${amt / 1000}K` : amt}`;
-        btn.addEventListener('click', () => addAmount(amt));
+
+        let startY = 0;
+        let swiped = false;
+
+        btn.addEventListener('pointerdown', (e) => {
+            startY = e.clientY;
+            swiped = false;
+        });
+
+        btn.addEventListener('pointerup', (e) => {
+            if (startY - e.clientY > 25) {
+                swiped = true;
+                addAmount(amt * 2);
+            }
+        });
+
+        btn.addEventListener('click', (e) => {
+            if (swiped) {
+                swiped = false;
+                return;
+            }
+            addAmount(e.ctrlKey ? amt * 2 : amt);
+        });
+
         quickGrid.appendChild(btn);
     });
 };
