@@ -260,16 +260,20 @@ const renderQuickButtons = () => {
         btn.className = 'quick-btn';
         btn.textContent = `+${amt >= 1000 ? `${amt / 1000}K` : amt}`;
 
+        let startX = 0;
         let startY = 0;
         let swiped = false;
 
         btn.addEventListener('pointerdown', (e) => {
+            startX = e.clientX;
             startY = e.clientY;
             swiped = false;
         });
 
         btn.addEventListener('pointerup', (e) => {
-            if (startY - e.clientY > 25) {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            if (dx > 35 && Math.abs(dy) < dx * 0.7) {
                 swiped = true;
                 addAmount(amt * 2);
             }
