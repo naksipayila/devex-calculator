@@ -84,8 +84,8 @@ button {
 
 .tool-header {
     display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
+    align-items: center;
+    justify-content: space-between;
     gap: 1rem;
     padding: 1.35rem 1.35rem 0.35rem;
     animation: staggerIn 0.3s ease-out both;
@@ -108,6 +108,32 @@ button {
     font-size: 1.6rem;
     font-weight: 800;
     line-height: 1.08;
+}
+
+.tax-header-btn {
+    flex: 0 0 auto;
+    width: 2.45rem;
+    height: 2.45rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-soft);
+    border: 1px solid rgba(74, 163, 255, 0.32);
+    border-radius: var(--radius-sm);
+    color: #d9ecff;
+    cursor: pointer;
+    transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.tax-header-btn:hover {
+    background: var(--surface-raised);
+    border-color: rgba(74, 163, 255, 0.5);
+    color: #ffffff;
+}
+
+.tax-header-btn:active {
+    transform: scale(0.94);
 }
 
 .devex-chip {
@@ -568,40 +594,6 @@ button {
     to { transform: rotate(360deg); }
 }
 
-.site-footer {
-    display: flex;
-    justify-content: center;
-    margin-top: 0.75rem;
-    animation: staggerIn 0.3s ease-out both;
-    animation-delay: 0.65s;
-}
-
-.footer-link-btn {
-    width: 100%;
-    min-height: 2.9rem;
-    background: var(--surface-soft);
-    border: 1px solid rgba(74, 163, 255, 0.32);
-    border-radius: var(--radius);
-    color: #d9ecff;
-    font-size: 0.74rem;
-    font-weight: 800;
-    padding: 0 1rem;
-    cursor: pointer;
-    transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.footer-link-btn:hover {
-    background: var(--surface-raised);
-    border-color: rgba(74, 163, 255, 0.5);
-    color: #ffffff;
-}
-
-.footer-link-btn:active {
-    transform: scale(0.97);
-}
-
 .drawer-overlay {
     position: fixed;
     inset: 0;
@@ -855,13 +847,9 @@ button:focus-visible {
         white-space: nowrap;
     }
 
-    .site-footer {
-        margin-top: 0.45rem;
-    }
-
-    .footer-link-btn {
-        min-height: 2.55rem;
-        font-size: 0.6875rem;
+    .tax-header-btn {
+        width: 2.15rem;
+        height: 2.15rem;
     }
 }
 
