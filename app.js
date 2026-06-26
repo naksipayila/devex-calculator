@@ -252,6 +252,38 @@ const updateUI = () => {
     persistState();
 };
 
+let ctrlDown = false;
+let hoveredQuickBtn = null;
+
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && !ctrlDown) {
+        ctrlDown = true;
+        if (hoveredQuickBtn) {
+            hoveredQuickBtn.textContent = hoveredQuickBtn.dataset.doubled;
+            hoveredQuickBtn.classList.add('ctrl-preview');
+        }
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    if (!e.ctrlKey) {
+        ctrlDown = false;
+        if (hoveredQuickBtn) {
+            hoveredQuickBtn.textContent = hoveredQuickBtn.dataset.original;
+            hoveredQuickBtn.classList.remove('ctrl-preview');
+        }
+    }
+});
+
+window.addEventListener('blur', () => {
+    ctrlDown = false;
+    if (hoveredQuickBtn) {
+        hoveredQuickBtn.textContent = hoveredQuickBtn.dataset.original;
+        hoveredQuickBtn.classList.remove('ctrl-preview');
+    }
+    hoveredQuickBtn = null;
+});
+
 const renderQuickButtons = () => {
     quickGrid.innerHTML = '';
 
@@ -262,13 +294,15 @@ const renderQuickButtons = () => {
         const doubledAmt = amt * 2;
         const doubledText = `+${doubledAmt >= 1000 ? `${doubledAmt / 1000}K` : doubledAmt}`;
         btn.textContent = originalText;
+        btn.dataset.original = originalText;
+        btn.dataset.doubled = doubledText;
 
         let startX = 0;
         let startY = 0;
         let swiped = false;
 
         const cleanupSwipe = () => {
-            btn.classList.remove('swiping');
+            btn.classList.remove('swiping', 'ctrl-preview');
             btn.textContent = originalText;
         };
 
@@ -284,27 +318,44 @@ const renderQuickButtons = () => {
             const dy = startY - e.clientY;
             if (dy > 15 && Math.abs(dx) < dy * 0.7) {
                 btn.classList.add('swiping');
+                btn.classList.remove('ctrl-preview');
                 btn.textContent = doubledText;
-            } else {
+            } else if (!btn.classList.contains('ctrl-preview')) {
                 btn.classList.remove('swiping');
                 btn.textContent = originalText;
             }
         });
 
-        btn.addEventListener('pointerup', (e) => {
+        btn.addEventListener('pointerenter', () => {
+            hoveredQuickBtn = btn;
+            if (ctrlDown) {
+                btn.textContent = doubledText;
+                btn.classList.add('ctrl-preview');
+            }
+        });
+
+        btn.addEventListener('pointerleave', () => {
+            if (hoveredQuickBtn === btn) {
+                hoveredQuickBtn = null;
+            }
             cleanupSwipe();
+        });
+
+        btn.addEventListener('pointerup', (e) => {
             const dx = e.clientX - startX;
             const dy = startY - e.clientY;
             if (dy > 35 && Math.abs(dx) < dy * 0.7) {
                 swiped = true;
+                cleanupSwipe();
                 btn.classList.add('swiped-flash');
                 setTimeout(() => btn.classList.remove('swiped-flash'), 400);
                 addAmount(amt * 2);
+            } else if (!ctrlDown) {
+                cleanupSwipe();
             }
         });
 
         btn.addEventListener('pointercancel', cleanupSwipe);
-        btn.addEventListener('pointerleave', cleanupSwipe);
 
         btn.addEventListener('click', (e) => {
             if (swiped) {
@@ -312,6 +363,9 @@ const renderQuickButtons = () => {
                 return;
             }
             addAmount(e.ctrlKey ? amt * 2 : amt);
+            if (e.ctrlKey) {
+                cleanupSwipe();
+            }
         });
 
         quickGrid.appendChild(btn);

@@ -351,9 +351,11 @@ button {
     transform: scale(0.95);
 }
 
-.quick-btn.swiping {
+.quick-btn.swiping,
+.quick-btn.ctrl-preview {
     border-color: var(--accent);
     transform: translateY(-3px) scale(1.08);
+    color: #d9ecff;
 }
 
 .quick-btn.swiped-flash {
