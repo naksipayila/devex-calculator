@@ -336,7 +336,7 @@ button {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    touch-action: pan-y;
+    touch-action: none;
     transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
 }
 
@@ -348,6 +348,16 @@ button {
 
 .quick-btn:active {
     transform: scale(0.95);
+}
+
+.quick-btn.swiping {
+    border-color: var(--accent);
+    transform: translateY(-3px) scale(1.08);
+}
+
+.quick-btn.swiped-flash {
+    border-color: var(--success);
+    box-shadow: 0 0 12px rgba(53, 212, 154, 0.3);
 }
 
 .summary-panel {
@@ -775,8 +785,8 @@ button:focus-visible {
     }
 
     .quick-btn {
-        min-height: 2.35rem;
-        padding: 0.5rem 0.2rem;
+        min-height: 2.55rem;
+        padding: 0.55rem 0.35rem;
     }
 
     .summary-panel {
@@ -874,7 +884,7 @@ button:focus-visible {
     }
 
     .quick-btn {
-        font-size: 0.625rem;
+        font-size: 0.7rem;
     }
 
     .summary-row-primary strong,

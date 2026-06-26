@@ -258,11 +258,19 @@ const renderQuickButtons = () => {
     [1000, 5000, 10000, 50000, 100000].forEach((amt) => {
         const btn = document.createElement('button');
         btn.className = 'quick-btn';
-        btn.textContent = `+${amt >= 1000 ? `${amt / 1000}K` : amt}`;
+        const originalText = `+${amt >= 1000 ? `${amt / 1000}K` : amt}`;
+        const doubledAmt = amt * 2;
+        const doubledText = `+${doubledAmt >= 1000 ? `${doubledAmt / 1000}K` : doubledAmt}`;
+        btn.textContent = originalText;
 
         let startX = 0;
         let startY = 0;
         let swiped = false;
+
+        const cleanupSwipe = () => {
+            btn.classList.remove('swiping');
+            btn.textContent = originalText;
+        };
 
         btn.addEventListener('pointerdown', (e) => {
             startX = e.clientX;
@@ -270,14 +278,33 @@ const renderQuickButtons = () => {
             swiped = false;
         });
 
-        btn.addEventListener('pointerup', (e) => {
+        btn.addEventListener('pointermove', (e) => {
+            if (swiped) return;
             const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            if (dx > 35 && Math.abs(dy) < dx * 0.7) {
+            const dy = startY - e.clientY;
+            if (dy > 15 && Math.abs(dx) < dy * 0.7) {
+                btn.classList.add('swiping');
+                btn.textContent = doubledText;
+            } else {
+                btn.classList.remove('swiping');
+                btn.textContent = originalText;
+            }
+        });
+
+        btn.addEventListener('pointerup', (e) => {
+            cleanupSwipe();
+            const dx = e.clientX - startX;
+            const dy = startY - e.clientY;
+            if (dy > 35 && Math.abs(dx) < dy * 0.7) {
                 swiped = true;
+                btn.classList.add('swiped-flash');
+                setTimeout(() => btn.classList.remove('swiped-flash'), 400);
                 addAmount(amt * 2);
             }
         });
+
+        btn.addEventListener('pointercancel', cleanupSwipe);
+        btn.addEventListener('pointerleave', cleanupSwipe);
 
         btn.addEventListener('click', (e) => {
             if (swiped) {
