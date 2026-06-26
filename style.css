@@ -298,8 +298,8 @@ button {
 .clear-btn {
     grid-area: clear;
     align-self: center;
-    width: 2.15rem;
-    height: 2.15rem;
+    width: 2.5rem;
+    height: 2.5rem;
     padding: 0;
 }
 
@@ -776,8 +776,8 @@ button:focus-visible {
     }
 
     .clear-btn {
-        width: 1.9rem;
-        height: 1.9rem;
+        width: 2.2rem;
+        height: 2.2rem;
     }
 
     .quick-grid {
@@ -785,8 +785,8 @@ button:focus-visible {
     }
 
     .quick-btn {
-        min-height: 2.55rem;
-        padding: 0.55rem 0.35rem;
+        min-height: 2.75rem;
+        padding: 0.6rem 0.4rem;
     }
 
     .summary-panel {
@@ -884,7 +884,7 @@ button:focus-visible {
     }
 
     .quick-btn {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
     }
 
     .summary-row-primary strong,
