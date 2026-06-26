@@ -255,7 +255,7 @@ const updateUI = () => {
 const renderQuickButtons = () => {
     quickGrid.innerHTML = '';
 
-    [1000, 5000, 10000, 50000, 100000].forEach((amt) => {
+    [1000, 10000, 100000, 200000].forEach((amt) => {
         const btn = document.createElement('button');
         btn.className = 'quick-btn';
         const originalText = `+${amt >= 1000 ? `${amt / 1000}K` : amt}`;

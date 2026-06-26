@@ -776,15 +776,17 @@ button:focus-visible {
     }
 
     .clear-btn {
-        width: 2.2rem;
-        height: 2.2rem;
+        width: 2.6rem;
+        height: 2.6rem;
     }
 
     .quick-grid {
+        flex-wrap: wrap;
         gap: 0.4rem;
     }
 
     .quick-btn {
+        flex: 0 0 calc(50% - 0.2rem);
         min-height: 2.75rem;
         padding: 0.6rem 0.4rem;
     }
