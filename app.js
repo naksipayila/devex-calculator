@@ -344,10 +344,30 @@ mainInput.addEventListener('blur', () => {
     inputWrapper.classList.remove('focused');
 });
 
-clearBtn.addEventListener('click', () => {
+let clearGuard = false;
+
+const handleClear = () => {
+    if (clearGuard) return;
+    clearGuard = true;
+
+    mainInput.blur();
+    summaryUsdInput.blur();
     clear();
     triggerFlash();
     updateUI();
+
+    requestAnimationFrame(() => {
+        clearGuard = false;
+    });
+};
+
+clearBtn.addEventListener('pointerup', (e) => {
+    e.preventDefault();
+    handleClear();
+});
+
+clearBtn.addEventListener('click', (e) => {
+    handleClear();
 });
 
 tryRateInput.addEventListener('input', (e) => {
