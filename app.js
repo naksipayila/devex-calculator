@@ -535,15 +535,6 @@ document.getElementById('grossCopyBtn').addEventListener('click', () => {
     }
 });
 
-summaryTry.addEventListener('click', () => {
-    const text = summaryTry.textContent;
-    if (text && text !== '0,00 ₺') {
-        navigator.clipboard.writeText(text).then(() => {
-            showToast('TRY copied');
-        }).catch(() => {});
-    }
-});
-
 summaryUsdWrapper.addEventListener('click', (e) => {
     if (e.target !== summaryUsdInput) {
         summaryUsdInput.focus();
