@@ -252,7 +252,7 @@ const renderQuickButtons = () => {
 
         const indicator = document.createElement('span');
         indicator.className = 'swipe-indicator';
-        indicator.textContent = '\u00d72';
+        indicator.textContent = '\u00d72 \u2191';
         wrapper.appendChild(indicator);
 
         const btn = document.createElement('button');
@@ -269,30 +269,32 @@ const renderQuickButtons = () => {
             let isDragging = false;
             let isSwiped = false;
             let startX = 0;
-            let currentX = 0;
+            let startY = 0;
+            let currentY = 0;
             let animFrame = null;
             let startTime = 0;
 
             const updateVisuals = () => {
                 if (!isDragging) return;
-                let tx = currentX;
-                if (tx > SWIPE_THRESHOLD) {
-                    tx = SWIPE_THRESHOLD + (tx - SWIPE_THRESHOLD) * 0.5;
+                let ty = currentY;
+                if (ty > SWIPE_THRESHOLD) {
+                    ty = SWIPE_THRESHOLD + (ty - SWIPE_THRESHOLD) * 0.5;
                 }
-                btn.style.transform = `translateX(${tx}px) scale(0.97)`;
+                btn.style.transform = `translateY(${ty}px) scale(0.97)`;
                 animFrame = null;
             };
 
             const snapBack = () => {
                 btn.style.transition = 'transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)';
-                btn.style.transform = 'translateX(0px) scale(1)';
+                btn.style.transform = 'translateY(0px) scale(1)';
             };
 
             btn.addEventListener('pointerdown', (e) => {
                 isDragging = true;
                 isSwiped = false;
                 startX = e.clientX;
-                currentX = 0;
+                startY = e.clientY;
+                currentY = 0;
                 startTime = Date.now();
                 btn.setPointerCapture(e.pointerId);
                 btn.style.transition = 'none';
@@ -302,10 +304,11 @@ const renderQuickButtons = () => {
             btn.addEventListener('pointermove', (e) => {
                 if (!isDragging) return;
                 const dx = e.clientX - startX;
-                if (Math.abs(dx) > 3) isSwiped = true;
-                if (dx > 0) {
-                    currentX = dx;
-                    if (dx > 10) {
+                const dy = e.clientY - startY;
+                if (Math.abs(dy) > 3 && Math.abs(dy) > Math.abs(dx)) isSwiped = true;
+                if (dy > 0) {
+                    currentY = dy;
+                    if (dy > 10) {
                         btn.classList.add('swiping');
                         indicator.classList.add('show');
                     } else {
@@ -329,10 +332,10 @@ const renderQuickButtons = () => {
                 }
 
                 const timeElapsed = Date.now() - startTime;
-                const velocity = currentX / timeElapsed;
-                const isFastFlick = velocity > 0.4 && currentX > 10;
+                const velocity = currentY / timeElapsed;
+                const isFastFlick = velocity > 0.4 && currentY > 10;
 
-                if (currentX > SWIPE_THRESHOLD || isFastFlick) {
+                if (currentY > SWIPE_THRESHOLD || isFastFlick) {
                     btn.classList.add('swiped-flash');
                     setTimeout(() => btn.classList.remove('swiped-flash'), 400);
                     addAmount(amt * 2);
@@ -341,7 +344,7 @@ const renderQuickButtons = () => {
                 btn.classList.remove('swiping');
                 indicator.classList.remove('show');
                 snapBack();
-                currentX = 0;
+                currentY = 0;
             };
 
             btn.addEventListener('pointerup', handleEnd);

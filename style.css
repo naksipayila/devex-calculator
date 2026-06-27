@@ -333,9 +333,11 @@ button {
     touch-action: manipulation;
 }
 
-.clear-btn:hover {
-    color: var(--danger);
-    background-color: rgba(251, 113, 133, 0.11);
+@media (hover: hover) {
+    .clear-btn:hover {
+        color: var(--danger);
+        background-color: rgba(251, 113, 133, 0.11);
+    }
 }
 
 .refresh-rate-btn:hover,
@@ -405,9 +407,9 @@ button {
     inset: 0;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    padding-left: 0.65rem;
-    background: var(--accent);
+    justify-content: center;
+    padding-top: 0;
+    background: #1d5a94;
     color: #ffffff;
     font-size: 0.8rem;
     font-weight: 800;
