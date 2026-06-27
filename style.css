@@ -14,7 +14,7 @@
     --text-soft: #7f8da3;
     --border: #273244;
     --border-strong: #334056;
-    --accent: #4aa3ff;
+    --accent: #3388d8;
     --accent-soft: rgba(74, 163, 255, 0.12);
     --success: #35d49a;
     --warning: #f8c14a;
@@ -110,10 +110,16 @@ button {
     line-height: 1.08;
 }
 
-.tax-header-btn {
+.header-buttons {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.header-icon-btn {
     flex: 0 0 auto;
-    width: 2.45rem;
-    height: 2.45rem;
+    width: 2.6rem;
+    height: 2.6rem;
     padding: 0;
     display: flex;
     align-items: center;
@@ -126,13 +132,13 @@ button {
     transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
-.tax-header-btn:hover {
+.header-icon-btn:hover {
     background: var(--surface-raised);
     border-color: rgba(74, 163, 255, 0.5);
     color: #ffffff;
 }
 
-.tax-header-btn:active {
+.header-icon-btn:active {
     transform: scale(0.94);
 }
 
@@ -298,8 +304,8 @@ button {
 .clear-btn {
     grid-area: clear;
     align-self: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.7rem;
+    height: 2.7rem;
     padding: 0;
     touch-action: manipulation;
 }
@@ -322,9 +328,19 @@ button {
     gap: 0.5rem;
 }
 
-.quick-btn {
+.quick-btn-wrapper {
+    position: relative;
     flex: 1;
     min-width: 0;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+}
+
+.quick-btn {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    width: 100%;
     min-height: 2.75rem;
     padding: 0.65rem 0.625rem;
     background: var(--surface-soft);
@@ -351,16 +367,34 @@ button {
     transform: scale(0.95);
 }
 
-.quick-btn.swiping,
-.quick-btn.ctrl-preview {
+.quick-btn.swiping {
     border-color: var(--accent);
-    transform: translateY(-3px) scale(1.08);
     color: #d9ecff;
 }
 
 .quick-btn.swiped-flash {
-    border-color: var(--success);
-    box-shadow: 0 0 12px rgba(53, 212, 154, 0.3);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(74, 163, 255, 0.3);
+}
+
+.swipe-indicator {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 800;
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}
+
+.swipe-indicator.show {
+    opacity: 1;
 }
 
 .summary-panel {
@@ -531,15 +565,21 @@ button {
 }
 
 .rate-panel {
-    min-height: 3rem;
     padding: 0.6rem 0.75rem;
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
 }
 
-.rate-line {
+.rate-devex-row {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.rate-exchange-row {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
@@ -547,6 +587,7 @@ button {
     font-size: 0.68rem;
     font-weight: 700;
     white-space: nowrap;
+    margin-left: auto;
 }
 
 .inline-rate-input {
@@ -585,22 +626,6 @@ button {
 
 .refresh-rate-btn.spinning svg {
     animation: spin 0.8s linear infinite;
-}
-
-.rate-status {
-    color: var(--text-soft);
-    font-size: 0.6rem;
-    font-weight: 800;
-    text-align: right;
-    min-width: 5rem;
-}
-
-.rate-status.ok {
-    color: var(--success);
-}
-
-.rate-status.warning {
-    color: var(--warning);
 }
 
 @keyframes spin {
@@ -677,6 +702,53 @@ button:focus-visible {
 .drawer-body {
     display: flex;
     flex-direction: column;
+}
+
+.drawer-info-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.info-section-label {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.info-item strong {
+    color: var(--text);
+}
+
+.info-icon {
+    flex-shrink: 0;
+    width: 1.15rem;
+    height: 1.15rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.65rem;
+    font-weight: 800;
+    border-radius: 50%;
 }
 
 .tax-input-group {
@@ -779,19 +851,22 @@ button:focus-visible {
     }
 
     .clear-btn {
-        width: 2.6rem;
-        height: 2.6rem;
+        width: 2.8rem;
+        height: 2.8rem;
     }
 
     .quick-grid {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 0.4rem;
     }
 
+    .quick-btn-wrapper {
+        flex: 1;
+    }
+
     .quick-btn {
-        flex: 0 0 calc(50% - 0.2rem);
-        min-height: 2.75rem;
-        padding: 0.6rem 0.4rem;
+        min-height: 3rem;
+        padding: 0.65rem 0.4rem;
     }
 
     .summary-panel {
@@ -827,20 +902,19 @@ button:focus-visible {
     }
 
     .rate-panel {
-        align-items: center;
-        flex-direction: row;
-        flex-wrap: nowrap;
         gap: 0.35rem;
-        min-height: 0;
         padding: 0.5rem 0.55rem;
     }
 
-    .rate-line {
-        flex: 1 1 auto;
-        min-width: 0;
+    .rate-devex-row {
+        flex-shrink: 0;
+    }
+
+    .rate-exchange-row {
+        flex: 0 0 auto;
+        margin-left: auto;
         gap: 0.25rem;
         font-size: 0.58rem;
-        white-space: nowrap;
     }
 
     .inline-rate-input {
@@ -854,18 +928,9 @@ button:focus-visible {
         height: 1.2rem;
     }
 
-    .rate-status {
-        margin-left: auto;
-        text-align: right;
-        min-width: 0;
-        flex: 0 0 auto;
-        font-size: 0.52rem;
-        white-space: nowrap;
-    }
-
-    .tax-header-btn {
-        width: 2.15rem;
-        height: 2.15rem;
+    .header-icon-btn {
+        width: 2.3rem;
+        height: 2.3rem;
     }
 }
 

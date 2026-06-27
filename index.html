@@ -19,9 +19,14 @@
                         <p class="tool-eyebrow">DevEx</p>
                         <h1 class="tool-title">Calculator</h1>
                     </div>
-                    <button class="tax-header-btn" id="openTaxBtn" title="Tax Calculator" aria-label="Tax Calculator">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><path d="M8 10h.01"></path><path d="M12 10h.01"></path><path d="M16 10h.01"></path><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path><path d="M8 18h.01"></path><path d="M12 18h.01"></path><path d="M16 18h.01"></path></svg>
-                    </button>
+                    <div class="header-buttons">
+                        <button class="header-icon-btn" id="openInfoBtn" title="How to use" aria-label="How to use">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </button>
+                        <button class="header-icon-btn" id="openTaxBtn" title="Tax Calculator" aria-label="Tax Calculator">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><path d="M8 10h.01"></path><path d="M12 10h.01"></path><path d="M16 10h.01"></path><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path><path d="M8 18h.01"></path><path d="M12 18h.01"></path><path d="M16 18h.01"></path></svg>
+                        </button>
+                    </div>
                 </header>
 
                 <main class="interaction-area">
@@ -64,16 +69,17 @@
                     </section>
 
                     <section class="rate-panel" aria-label="Rate information">
-                        <div class="rate-line">
-                            <span>1 USD</span>
+                        <div class="rate-devex-row">
+                            <span class="devex-chip">1 R$ = $0.0038</span>
+                        </div>
+                        <div class="rate-exchange-row">
+                            <span>1 USD =</span>
                             <input type="number" step="0.01" id="tryRateInput" class="inline-rate-input" value="46.00">
                             <span>TRY</span>
-                            <span class="devex-chip">1 R$ = $0.0038</span>
                             <button class="refresh-rate-btn" id="refreshRateBtn" title="Refresh Rate" aria-label="Refresh Rate">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                             </button>
                         </div>
-                        <div class="rate-status" id="rateStatus">Preparing rate</div>
                     </section>
                 </main>
             </div>
@@ -114,6 +120,41 @@
                     <div class="tax-info-row">
                         <span>Roblox Fee (30%):</span>
                         <span id="taxAmountDisplay">0 R$</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="drawer-overlay" id="infoDrawer">
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3 class="drawer-title">How to Use</h3>
+                <button class="drawer-close-btn" id="closeInfoBtn" title="Close" aria-label="Close">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="drawer-body drawer-info-body">
+                <div class="info-section">
+                    <span class="info-section-label">Desktop</span>
+                    <div class="info-item">
+                        <span class="info-icon">1</span>
+                        <span>Click quick button = add amount.</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">2</span>
+                        <span>Right&#8209;click quick button = add double.</span>
+                    </div>
+                </div>
+                <div class="info-section">
+                    <span class="info-section-label">Mobile</span>
+                    <div class="info-item">
+                        <span class="info-icon">1</span>
+                        <span>Tap quick button = add amount.</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">2</span>
+                        <span>Swipe right on quick button = add double.</span>
                     </div>
                 </div>
             </div>

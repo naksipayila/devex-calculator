@@ -22,13 +22,15 @@ const quickGrid = document.getElementById('quickGrid');
 
 const tryRateInput = document.getElementById('tryRateInput');
 const refreshRateBtn = document.getElementById('refreshRateBtn');
-const rateStatus = document.getElementById('rateStatus');
 const summaryUsdWrapper = document.getElementById('summaryUsdWrapper');
 const summaryUsdInput = document.getElementById('summaryUsdInput');
 const summaryTry = document.getElementById('summaryTry');
 const taxDrawer = document.getElementById('taxDrawer');
 const openTaxBtn = document.getElementById('openTaxBtn');
 const closeTaxBtn = document.getElementById('closeTaxBtn');
+const infoDrawer = document.getElementById('infoDrawer');
+const openInfoBtn = document.getElementById('openInfoBtn');
+const closeInfoBtn = document.getElementById('closeInfoBtn');
 const netRobuxInput = document.getElementById('netRobuxInput');
 const grossRobuxInput = document.getElementById('grossRobuxInput');
 const taxAmountDisplay = document.getElementById('taxAmountDisplay');
@@ -97,11 +99,6 @@ const formatUsd = (value) => {
 
 const formatCurrencyTRY = (val) => {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val);
-};
-
-const setRateStatus = (text, type = 'ok') => {
-    rateStatus.textContent = text;
-    rateStatus.className = `rate-status ${type}`;
 };
 
 const persistState = () => {
@@ -179,12 +176,9 @@ const fetchExchangeRate = async () => {
 
     if (cachedRate && cachedTimestamp && (Date.now() - parseInt(cachedTimestamp, 10) < oneDay)) {
         tryRate = parseFloat(cachedRate);
-        setRateStatus('Rate: cached');
         updateUI();
         return;
     }
-
-    setRateStatus('Checking rate', 'warning');
 
     try {
         const response = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -198,7 +192,6 @@ const fetchExchangeRate = async () => {
             tryRate = data.rates.TRY;
             setStoredItem(STORAGE_KEYS.tryRate, tryRate.toString());
             setStoredItem(STORAGE_KEYS.tryRateTimestamp, Date.now().toString());
-            setRateStatus('Rate: current');
             updateUI();
         }
     } catch (error) {
@@ -206,10 +199,7 @@ const fetchExchangeRate = async () => {
 
         if (cachedRate) {
             tryRate = parseFloat(cachedRate);
-            setRateStatus('Rate: cached', 'warning');
             updateUI();
-        } else {
-            setRateStatus('Rate: manual', 'warning');
         }
     }
 };
@@ -252,123 +242,132 @@ const updateUI = () => {
     persistState();
 };
 
-let ctrlDown = false;
-let hoveredQuickBtn = null;
-
-document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && !ctrlDown) {
-        ctrlDown = true;
-        if (hoveredQuickBtn) {
-            hoveredQuickBtn.textContent = hoveredQuickBtn.dataset.doubled;
-            hoveredQuickBtn.classList.add('ctrl-preview');
-        }
-    }
-});
-
-document.addEventListener('keyup', (e) => {
-    if (!e.ctrlKey) {
-        ctrlDown = false;
-        if (hoveredQuickBtn) {
-            hoveredQuickBtn.textContent = hoveredQuickBtn.dataset.original;
-            hoveredQuickBtn.classList.remove('ctrl-preview');
-        }
-    }
-});
-
-window.addEventListener('blur', () => {
-    ctrlDown = false;
-    if (hoveredQuickBtn) {
-        hoveredQuickBtn.textContent = hoveredQuickBtn.dataset.original;
-        hoveredQuickBtn.classList.remove('ctrl-preview');
-    }
-    hoveredQuickBtn = null;
-});
-
 const renderQuickButtons = () => {
     quickGrid.innerHTML = '';
+    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     [1000, 10000, 100000, 200000].forEach((amt) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'quick-btn-wrapper';
+
+        const indicator = document.createElement('span');
+        indicator.className = 'swipe-indicator';
+        indicator.textContent = '\u00d72';
+        wrapper.appendChild(indicator);
+
         const btn = document.createElement('button');
         btn.className = 'quick-btn';
-        const originalText = `+${amt >= 1000 ? `${amt / 1000}K` : amt}`;
-        const doubledAmt = amt * 2;
-        const doubledText = `+${doubledAmt >= 1000 ? `${doubledAmt / 1000}K` : doubledAmt}`;
-        btn.textContent = originalText;
-        btn.dataset.original = originalText;
-        btn.dataset.doubled = doubledText;
 
-        let startX = 0;
-        let startY = 0;
-        let swiped = false;
+        const label = document.createElement('span');
+        label.textContent = `+${amt >= 1000 ? `${amt / 1000}K` : amt}`;
+        btn.appendChild(label);
 
-        const cleanupSwipe = () => {
-            btn.classList.remove('swiping', 'ctrl-preview');
-            btn.textContent = originalText;
-        };
+        wrapper.appendChild(btn);
 
-        btn.addEventListener('pointerdown', (e) => {
-            startX = e.clientX;
-            startY = e.clientY;
-            swiped = false;
-        });
+        if (hasTouch) {
+            const SWIPE_THRESHOLD = 35;
+            let isDragging = false;
+            let isSwiped = false;
+            let startX = 0;
+            let currentX = 0;
+            let animFrame = null;
+            let startTime = 0;
 
-        btn.addEventListener('pointermove', (e) => {
-            if (swiped) return;
-            const dx = e.clientX - startX;
-            const dy = startY - e.clientY;
-            if (dy > 15 && Math.abs(dx) < dy * 0.7) {
-                btn.classList.add('swiping');
-                btn.classList.remove('ctrl-preview');
-                btn.textContent = doubledText;
-            } else if (!btn.classList.contains('ctrl-preview')) {
+            const updateVisuals = () => {
+                if (!isDragging) return;
+                let tx = currentX;
+                if (tx > SWIPE_THRESHOLD) {
+                    tx = SWIPE_THRESHOLD + (tx - SWIPE_THRESHOLD) * 0.5;
+                }
+                btn.style.transform = `translateX(${tx}px) scale(0.97)`;
+                animFrame = null;
+            };
+
+            const snapBack = () => {
+                btn.style.transition = 'transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                btn.style.transform = 'translateX(0px) scale(1)';
+            };
+
+            btn.addEventListener('pointerdown', (e) => {
+                isDragging = true;
+                isSwiped = false;
+                startX = e.clientX;
+                currentX = 0;
+                startTime = Date.now();
+                btn.setPointerCapture(e.pointerId);
+                btn.style.transition = 'none';
+                btn.style.transform = 'scale(0.97)';
+            });
+
+            btn.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                if (Math.abs(dx) > 3) isSwiped = true;
+                if (dx > 0) {
+                    currentX = dx;
+                    if (dx > 10) {
+                        btn.classList.add('swiping');
+                        indicator.classList.add('show');
+                    } else {
+                        btn.classList.remove('swiping');
+                        indicator.classList.remove('show');
+                    }
+                    if (!animFrame) {
+                        animFrame = requestAnimationFrame(updateVisuals);
+                    }
+                }
+            });
+
+            const handleEnd = (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                btn.releasePointerCapture(e.pointerId);
+
+                if (animFrame) {
+                    cancelAnimationFrame(animFrame);
+                    animFrame = null;
+                }
+
+                const timeElapsed = Date.now() - startTime;
+                const velocity = currentX / timeElapsed;
+                const isFastFlick = velocity > 0.4 && currentX > 10;
+
+                if (currentX > SWIPE_THRESHOLD || isFastFlick) {
+                    btn.classList.add('swiped-flash');
+                    setTimeout(() => btn.classList.remove('swiped-flash'), 400);
+                    addAmount(amt * 2);
+                }
+
                 btn.classList.remove('swiping');
-                btn.textContent = originalText;
-            }
+                indicator.classList.remove('show');
+                snapBack();
+                currentX = 0;
+            };
+
+            btn.addEventListener('pointerup', handleEnd);
+            btn.addEventListener('pointercancel', handleEnd);
+
+            btn.addEventListener('click', (e) => {
+                if (isSwiped) {
+                    e.preventDefault();
+                    return;
+                }
+                btn.style.transform = 'scale(0.95)';
+                setTimeout(() => { btn.style.transform = 'scale(1)'; }, 100);
+                addAmount(amt);
+            });
+        } else {
+            btn.addEventListener('click', () => {
+                addAmount(amt);
+            });
+        }
+
+        btn.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            addAmount(amt * 2);
         });
 
-        btn.addEventListener('pointerenter', () => {
-            hoveredQuickBtn = btn;
-            if (ctrlDown) {
-                btn.textContent = doubledText;
-                btn.classList.add('ctrl-preview');
-            }
-        });
-
-        btn.addEventListener('pointerleave', () => {
-            if (hoveredQuickBtn === btn) {
-                hoveredQuickBtn = null;
-            }
-            cleanupSwipe();
-        });
-
-        btn.addEventListener('pointerup', (e) => {
-            const dx = e.clientX - startX;
-            const dy = startY - e.clientY;
-            if (dy > 35 && Math.abs(dx) < dy * 0.7) {
-                swiped = true;
-                cleanupSwipe();
-                btn.classList.add('swiped-flash');
-                setTimeout(() => btn.classList.remove('swiped-flash'), 400);
-                addAmount(amt * 2);
-            } else if (!ctrlDown) {
-                cleanupSwipe();
-            }
-        });
-
-        btn.addEventListener('pointercancel', cleanupSwipe);
-
-        btn.addEventListener('click', (e) => {
-            if (swiped) {
-                swiped = false;
-                return;
-            }
-            addAmount(e.ctrlKey ? amt * 2 : amt);
-            if (e.ctrlKey) {
-                cleanupSwipe();
-            }
-        });
-
-        quickGrid.appendChild(btn);
+        quickGrid.appendChild(wrapper);
     });
 };
 
@@ -430,7 +429,6 @@ tryRateInput.addEventListener('input', (e) => {
         tryRate = val;
         setStoredItem(STORAGE_KEYS.tryRate, tryRate.toString());
         setStoredItem(STORAGE_KEYS.tryRateTimestamp, Date.now().toString());
-        setRateStatus('Rate: manual', 'warning');
 
         const rawUsd = parseUsd(usd);
         const rawRobux = parseRobux(robux);
@@ -455,6 +453,21 @@ refreshRateBtn.addEventListener('click', async () => {
     }, 500);
 });
 
+openInfoBtn.addEventListener('click', () => {
+    infoDrawer.classList.add('open');
+});
+
+const closeInfoDrawer = () => {
+    infoDrawer.classList.remove('open');
+};
+
+closeInfoBtn.addEventListener('click', closeInfoDrawer);
+infoDrawer.addEventListener('click', (e) => {
+    if (e.target === infoDrawer) {
+        closeInfoDrawer();
+    }
+});
+
 openTaxBtn.addEventListener('click', () => {
     taxDrawer.classList.add('open');
     netRobuxInput.value = '';
@@ -474,8 +487,12 @@ taxDrawer.addEventListener('click', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && taxDrawer.classList.contains('open')) {
-        closeDrawer();
+    if (e.key === 'Escape') {
+        if (infoDrawer.classList.contains('open')) {
+            closeInfoDrawer();
+        } else if (taxDrawer.classList.contains('open')) {
+            closeDrawer();
+        }
     }
 });
 

@@ -71,20 +71,18 @@ Open `index.html` in any browser. No server, no build step.
 | Action | Mobile | Desktop |
 |--------|--------|---------|
 | Add amount | Tap quick button | Click quick button |
-| Add double | Swipe up | Hold `Ctrl` and click |
-| Double preview | Button lifts, label changes to `2x` | Hold `Ctrl` while hovering &mdash; label shows the doubled value |
+| Add double | — | Right‑click |
+| Double preview | — | — |
 | Clear all | Tap trash icon | Click trash icon |
 
 The quick button labels update live as you interact:
 
-| Button | Single Tap | Swipe Up / Ctrl+Click |
-|--------|------------|------------------------|
+| Button | Single Tap / Left Click | Right‑click |
+|--------|--------------------------|--------------|
 | `+1K` | 1,000 | 2,000 |
 | `+10K` | 10,000 | 20,000 |
 | `+100K` | 100,000 | 200,000 |
 | `+200K` | 200,000 | 400,000 |
-
-**Swipe detail**: on mobile, drag upward at least 35&nbsp;px on any quick button. A live preview starts after 15&nbsp;px. On success the button flashes green.
 
 ---
 
@@ -148,7 +146,7 @@ The app maintains a simple state cycle:
 Input change → update Robux/USD → recalculate TRY → persist to LocalStorage → render UI
 ```
 
-This runs on every interaction: typing, quick-add, clear, rate change, and swipe.
+This runs on every interaction: typing, quick-add, clear, and rate change.
 
 ### Number Formatting
 
