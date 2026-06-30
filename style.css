@@ -392,37 +392,6 @@ button {
     transform: scale(0.95);
 }
 
-.quick-btn.swiping {
-    border-color: var(--accent);
-    color: #d9ecff;
-}
-
-.quick-btn.swiped-flash {
-    border-color: var(--accent);
-    box-shadow: 0 0 12px rgba(74, 163, 255, 0.3);
-}
-
-.swipe-indicator {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-top: 0;
-    background: #1d5a94;
-    color: #ffffff;
-    font-size: 0.8rem;
-    font-weight: 800;
-    border-radius: var(--radius-sm);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.12s ease;
-}
-
-.swipe-indicator.show {
-    opacity: 1;
-}
-
 .summary-panel {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

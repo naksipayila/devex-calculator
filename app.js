@@ -244,16 +244,10 @@ const updateUI = () => {
 
 const renderQuickButtons = () => {
     quickGrid.innerHTML = '';
-    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     [1000, 10000, 100000, 200000].forEach((amt) => {
         const wrapper = document.createElement('div');
         wrapper.className = 'quick-btn-wrapper';
-
-        const indicator = document.createElement('span');
-        indicator.className = 'swipe-indicator';
-        indicator.textContent = '\u00d72 \u2191';
-        wrapper.appendChild(indicator);
 
         const btn = document.createElement('button');
         btn.className = 'quick-btn';
@@ -264,106 +258,9 @@ const renderQuickButtons = () => {
 
         wrapper.appendChild(btn);
 
-        if (hasTouch) {
-            const SWIPE_THRESHOLD = 35;
-            let isDragging = false;
-            let isSwiped = false;
-            let startX = 0;
-            let startY = 0;
-            let currentY = 0;
-            let animFrame = null;
-            let startTime = 0;
-
-            const updateVisuals = () => {
-                if (!isDragging) return;
-                let ty = currentY;
-                if (ty > SWIPE_THRESHOLD) {
-                    ty = SWIPE_THRESHOLD + (ty - SWIPE_THRESHOLD) * 0.5;
-                }
-                btn.style.transform = `translateY(${ty}px) scale(0.97)`;
-                animFrame = null;
-            };
-
-            const snapBack = () => {
-                btn.style.transition = 'transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)';
-                btn.style.transform = 'translateY(0px) scale(1)';
-            };
-
-            btn.addEventListener('pointerdown', (e) => {
-                isDragging = true;
-                isSwiped = false;
-                startX = e.clientX;
-                startY = e.clientY;
-                currentY = 0;
-                startTime = Date.now();
-                btn.setPointerCapture(e.pointerId);
-                btn.style.transition = 'none';
-                btn.style.transform = 'scale(0.97)';
-            });
-
-            btn.addEventListener('pointermove', (e) => {
-                if (!isDragging) return;
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-                if (Math.abs(dy) > 3 && Math.abs(dy) > Math.abs(dx)) isSwiped = true;
-                if (dy > 0) {
-                    currentY = dy;
-                    if (dy > 10) {
-                        btn.classList.add('swiping');
-                        indicator.classList.add('show');
-                    } else {
-                        btn.classList.remove('swiping');
-                        indicator.classList.remove('show');
-                    }
-                    if (!animFrame) {
-                        animFrame = requestAnimationFrame(updateVisuals);
-                    }
-                }
-            });
-
-            const handleEnd = (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-                btn.releasePointerCapture(e.pointerId);
-
-                if (animFrame) {
-                    cancelAnimationFrame(animFrame);
-                    animFrame = null;
-                }
-
-                const timeElapsed = Date.now() - startTime;
-                const velocity = currentY / timeElapsed;
-                const isFastFlick = velocity > 0.4 && currentY > 10;
-
-                if (currentY > SWIPE_THRESHOLD || isFastFlick) {
-                    btn.classList.add('swiped-flash');
-                    setTimeout(() => btn.classList.remove('swiped-flash'), 400);
-                    addAmount(amt * 2);
-                }
-
-                btn.classList.remove('swiping');
-                indicator.classList.remove('show');
-                snapBack();
-                currentY = 0;
-            };
-
-            btn.addEventListener('pointerup', handleEnd);
-            btn.addEventListener('pointercancel', handleEnd);
-
-            btn.addEventListener('click', (e) => {
-                if (isSwiped) {
-                    e.preventDefault();
-                    return;
-                }
-                btn.style.transform = 'scale(0.95)';
-                setTimeout(() => { btn.style.transform = 'scale(1)'; }, 100);
-                addAmount(amt);
-            });
-        } else {
-            btn.addEventListener('click', () => {
-                addAmount(amt);
-            });
-        }
+        btn.addEventListener('click', () => {
+            addAmount(amt);
+        });
 
         btn.addEventListener('contextmenu', (e) => {
             e.preventDefault();
